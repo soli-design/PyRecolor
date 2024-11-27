@@ -72,7 +72,7 @@ def svgRecolor(textFileName):
         except:
             break
         replaceTo = replaceFrom + 7 # mert csak HEX-et nézünk, HEXA-t nem!
-        startCountAt = replaceFrom
+        startCountAt = replaceTo
         # print(svgcontent[replaceFrom:replaceTo])
         # itt megy a színcsere
         svgcontent = svgcontent[:replaceFrom] + _TARGETCOLOR + svgcontent[replaceTo:]
@@ -96,7 +96,7 @@ def svgRecolor(textFileName):
 
 print(f"\n\nA megadott mappából betöltjük az össes SVG file-t\nmajd kicseréljük a szinezéseit '{_TARGETCOLOR}'-ra.\n")
 
-uri = input("Add meg a mappa elérési útját!\npl.: c://mappa/mappa/\n")
+uri = input("Add meg a mappa elérési útját!\npl.: c://mappa/mappa/\n>>")
 
 # az inputban esélyes, hogy záró / vagy \ nélkül kapjuk az elérési utat. Hozzáadjuk, ha nincs ott.
 if uri[-1] != "/" and "/" in uri:
@@ -104,6 +104,13 @@ if uri[-1] != "/" and "/" in uri:
 elif uri[-1] != "\\" and "\\" in uri:
     uri += "\\"
 
+print(f"Add meg a cél színt, amire minden SVG-t átszínezünk.\nAlapértelmezett: {_TARGETCOLOR}")
+color = input("\nAdd meg a HEX színt vagy szín nevet!\nHa HEX színt adsz meg, írd bele a #-et is!\nAmennyiben az alapértelmezett megfelel, csak nyomj entert!\n>> ")
+print(f"color = {color}")
+print(f"color.len = {len(color)}")
+
+if len(color) > 0 and color != _TARGETCOLOR:
+    _TARGETCOLOR = color
 
 process = getFileList(uri) # a mappában lévő eredeti SVG filenevek
 
