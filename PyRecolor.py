@@ -3,14 +3,20 @@ _FROM = "svg"
 _TO = "txt"
 _TARGETCOLOR = "currentColor"
 
+# Ebben az array-ben gyűjtjük a hibák üzeneteit
 hibajegyzek = []
 
 def gatherErrors(erMsg, exc):
+    """hibaüznetek lekezelése. Kírás és gyűjtés.\n
+    erMsg : string -> dev által definiált hibaüzenet\n
+    exc : error object -> python hibaüzenet"""
     hibajegyzek.append(erMsg)
     print(exc)
 
 def getFileList(uri):
-    """A kapott URI alapján betöltjük az összes SVG-t!\nuri : string -> A megadott mappa összes .SVG file-ját betölti egy listába.\nreturn : fileList"""
+    """A kapott URI alapján betöltjük az összes SVG-t!\n
+    uri : string -> A megadott mappa összes .SVG file-ját betölti egy listába.\n
+    return : fileList"""
     fileList = list()
     try:
         oslist = os.listdir(uri)
@@ -31,12 +37,16 @@ def getFileList(uri):
     for name in oslist:
         if ".svg" in name:
             fileList.append(name)
-            # print(">> " + name + " hozzáadva a listához")
+            print(">> " + name + " hozzáadva a listához")
 
     return fileList
 
 def fileRenamer(FileName, formatFrom, formatTo):
-    """Átalakítjuk a file kiterjesztését\nFileName : string -> A teljes elérési útvonal\nformaFrom : string -> forrás file formátum\nformatTo : strong -> kimeneti kiterjesztés"""
+    """Átalakítjuk a file kiterjesztését\n
+    FileName : string -> A teljes elérési útvonal\n
+    formatFrom : string -> forrás file formátum\n
+    formatTo : string -> kimeneti kiterjesztés\n
+    return : string"""
     file = FileName.split(".") 
     print(f"{formatFrom} -> {formatTo} -- {file[0]}")
     file[1] = formatTo
@@ -44,7 +54,8 @@ def fileRenamer(FileName, formatFrom, formatTo):
     return done
 
 def svgRecolor(textFileName):
-    f"""Megnyitjuk a file-t, megkeressük a HEX kódokat és átírjuk '{_TARGETCOLOR}'-ra\ntextFileName : string -> A teljes file elérési útvonalat kell megadni."""
+    """Megnyitjuk a file-t, megkeressük a HEX kódokat és átírjuk _TARGETCOLOR-ra\n
+    textFileName : string -> A teljes file elérési útvonalat kell megadni."""
     try:
         f = open(textFileName, "rt")
         svgcontent = f.read()
