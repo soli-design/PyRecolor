@@ -4,4 +4,4 @@
 
 Runs in commandline.
 
-Reads only on HEX color, HEXA is unsupported (yet).
+HEX shorthand, HEX (6 char) and HEXA are supported now.

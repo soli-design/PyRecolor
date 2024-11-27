@@ -37,7 +37,6 @@ def getFileList(uri):
     for name in oslist:
         if ".svg" in name:
             fileList.append(name)
-            print(">> " + name + " hozzáadva a listához")
 
     return fileList
 
@@ -48,7 +47,7 @@ def fileRenamer(FileName, formatFrom, formatTo):
     formatTo : string -> kimeneti kiterjesztés\n
     return : string"""
     file = FileName.split(".") 
-    print(f"{formatFrom} -> {formatTo} -- {file[0]}")
+
     file[1] = formatTo
     done = ".".join(file)
     return done
@@ -74,7 +73,11 @@ def svgRecolor(textFileName):
         except:
             break
 
-        replaceTo = svgcontent.index("\"",replaceFrom)
+        
+        if "<style>" in svgcontent:
+            replaceTo = svgcontent.index(";",replaceFrom)
+        else:
+            replaceTo = svgcontent.index("\"",replaceFrom)
 
         startCountAt = replaceTo
 
@@ -110,8 +113,6 @@ elif uri[-1] != "\\" and "\\" in uri:
 
 print(f"Add meg a cél színt, amire minden SVG-t átszínezünk.\nAlapértelmezett: {_TARGETCOLOR}")
 color = input("\nAdd meg a HEX színt vagy szín nevet!\nHa HEX színt adsz meg, írd bele a #-et is!\nAmennyiben az alapértelmezett megfelel, csak nyomj entert!\n>> ")
-print(f"color = {color}")
-print(f"color.len = {len(color)}")
 
 if len(color) > 0 and color != _TARGETCOLOR:
     _TARGETCOLOR = color
@@ -138,8 +139,8 @@ except Exception as e:
 finally:
     try:
         # minden file-t feldolgozunk egyesével
+        print("[ feldolgozás ] megkezdve")
         for file in process2:
-            print(file + " [ feldolgozása ] megkezdve")
             svgRecolor(file)
         print("#3 - [ feldolgozás sikeres ]")
 
