@@ -56,6 +56,7 @@ def fileRenamer(FileName, formatFrom, formatTo):
 def svgRecolor(textFileName):
     """Megnyitjuk a file-t, megkeressük a HEX kódokat és átírjuk _TARGETCOLOR-ra\n
     textFileName : string -> A teljes file elérési útvonalat kell megadni."""
+    
     try:
         f = open(textFileName, "rt")
         svgcontent = f.read()
@@ -67,13 +68,16 @@ def svgRecolor(textFileName):
     # itt megy a szín keresése
     startCountAt = 0
     while startCountAt <= len(svgcontent):
+        
         try:
             replaceFrom = svgcontent.index("#", startCountAt)
         except:
             break
-        replaceTo = replaceFrom + 7 # mert csak HEX-et nézünk, HEXA-t nem!
+
+        replaceTo = svgcontent.index("\"",replaceFrom)
+
         startCountAt = replaceTo
-        # print(svgcontent[replaceFrom:replaceTo])
+
         # itt megy a színcsere
         svgcontent = svgcontent[:replaceFrom] + _TARGETCOLOR + svgcontent[replaceTo:]
 
