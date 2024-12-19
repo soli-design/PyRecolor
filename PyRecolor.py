@@ -1,4 +1,8 @@
 import os
+from halo import Halo
+
+spinner = Halo(text='Dolgozok...', spinner='dots')
+
 _FROM = "svg"
 _TO = "txt"
 _TARGETCOLOR = "currentColor"
@@ -84,6 +88,15 @@ def svgRecolor(textFileName):
         # itt megy a színcsere
         svgcontent = svgcontent[:replaceFrom] + _TARGETCOLOR + svgcontent[replaceTo:]
 
+        try:
+            fixed = fixHeader(svgcontent)
+            if fixed != False:
+                svgcontent = fixed
+            else:
+                gatherErrors(f'több osztály a file-ban: {textFileName}','')
+        except Exception as error:
+            gatherErrors(f'hiba a file ({textFileName}) fejlécének javítása közben', error)
+
     try:
         f = open(textFileName, "w")
     except Exception as error:
@@ -96,6 +109,70 @@ def svgRecolor(textFileName):
 
     f.close()
     # print(f'{textFileName} bezárva')
+
+def fixHeader(svgcontent):
+    firstIndexOfDefsStyle = ""
+    lastIndexOfDefsStyle = ""
+    strokeWidth = ""
+    strokeLineJoin = ""
+    strokeLineCaps = ""
+    stroke = ""
+    fill = ""
+    fillRule = ""
+    numberOfClasses = ""
+
+    ## remove ID-s to avoid bullshit HTML errors
+    if "id=" in svgcontent:
+        fi = svgcontent.index("id=")
+        li = svgcontent.index("\"",fi+4)
+        svgcontent = svgcontent[:fi] + svgcontent[li+1:]
+
+    if "<defs><style>." in svgcontent:
+        firstIndexOfDefsStyle = svgcontent.index("<defs><style>.")
+        lastIndexOfDefsStyle = svgcontent.index("</style></defs>")
+        
+        styles = svgcontent[firstIndexOfDefsStyle:lastIndexOfDefsStyle]
+
+        ## h több mint 1 class van benne, akkor nem csinálunk semmit.
+        numberOfClasses = styles.count('{')
+        if numberOfClasses > 1:
+            print("Több, mint 1 osztály definiálva. Átugorjuk...")
+            return False
+        
+        if "stroke-width:" in styles:
+            strokeWidth = returnClassValue(styles,"stroke-width")
+        if "stroke-linecap:" in styles:
+            strokeLineCaps = returnClassValue(styles,"stroke-linecap")
+        if "stroke-linejoin:" in styles:
+            strokeLineJoin = returnClassValue(styles,"stroke-linejoin")
+        if "stroke:" in styles:
+            stroke = returnClassValue(styles,"stroke")
+        if "fill:" in styles:
+            fill = returnClassValue(styles, "fill")
+        if "fill-rule:" in styles:
+            fillRule = returnClassValue(styles, "fill-rule")
+
+        ## clear styles
+        source = svgcontent[:firstIndexOfDefsStyle]
+        source += svgcontent[lastIndexOfDefsStyle+len("</style></defs>"):]
+
+        ## Add to header
+        headerAddition = f" stroke=\"{stroke}\" stroke-width=\"{strokeWidth}\" stroke-linecap=\"{strokeLineCaps}\" stroke-linejoin=\"{strokeLineJoin}\" fill=\"{fill}\" fill-rule=\"{fillRule}\" "
+        fixFrom = source.index(">",source.index("<svg"))
+        firsthalf = source[:fixFrom]
+        lasthalf = source[fixFrom:]
+        done = firsthalf + headerAddition + lasthalf
+        return done
+    else:
+        return False
+
+def returnClassValue(source,param):
+    cursor = source.index(f"{param}:")
+    valueStart = source.index(":",cursor)
+    cursor = valueStart
+    valueEnd = source.index(";",cursor)
+    value = source[valueStart+1:valueEnd]
+    return value
 
 #####################################################
     
@@ -124,12 +201,14 @@ process2 = [] # TXT filenevek
 process3 = [] # visszanevezett SVG filenevek
 
 try:
+    spinner.start()
     # feldolgozáshoz mindet átnevezzük SVG-ről TXT-re
     for file in process:
         newname = fileRenamer(uri + file, _FROM, _TO)
         os.rename(uri + file, newname)
         process2.append(newname)
-    print("#2 - [ átnevezés siekres ]")
+    spinner.stop()
+    print("#2 - [ átnevezés ] sikeres")
 
 except Exception as e:
     gatherErrors("valami baj van az [ ÁTALAKÍTÁSSAL ], szidd a programozót!", e)
@@ -139,10 +218,12 @@ except Exception as e:
 finally:
     try:
         # minden file-t feldolgozunk egyesével
-        print("[ feldolgozás ] megkezdve")
+        print("#3 - [ feldolgozás ] megkezdve")
+        spinner.start()
         for file in process2:
             svgRecolor(file)
-        print("#3 - [ feldolgozás sikeres ]")
+        spinner.stop()
+        print("#3 - [ feldolgozás ] sikeres")
 
     except Exception as error:
         gatherErrors("valami baj van a [FELDOLGOZÁSSAL], szidd a programozót!", error)
@@ -150,12 +231,14 @@ finally:
     
     finally:
         try:
-            print("#4 - [lezárás megkezdése]")
+            print("#4 - [ lezárás ] megkezdése")
+            spinner.start()
             # manipuláció után visszarakjuk SVG-re mindet
             for file in process2:
                 newname = fileRenamer(file, _TO, _FROM) # visszafelé átnevezzük.
                 os.rename(file, newname)
-            print("#5 - [A file visszanevezés folyamata sikeresen végbement]")
+            spinner.start()
+            print("#5 - [ visszanevezés ] sikeresen végbement.")
             if len(hibajegyzek) != 0:
                 print(f"Hibás műveletek száma: {len(hibajegyzek)}")
                 print(hibajegyzek,sep="\n")
